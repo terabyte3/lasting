@@ -4,7 +4,7 @@ use env_logger;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use std::{env};
-use serde_json::{Value};
+use serde_json::{Value, json};
 
 struct AppState {
     client: Client,
@@ -98,7 +98,26 @@ async fn get_lastfm(http: &Client, u: String) -> LastFMResponse {
 	let mut top_tracks: TopTracks = top_tracks_res.json::<TopTracks>().await.unwrap();
 	for trackn in 0..top_tracks.toptracks.track.len() {
 		let track = &mut top_tracks.toptracks.track[trackn];
-		top_tracks.toptracks.track[trackn] = track.clone();
+		if track.get("image").unwrap().as_array().unwrap()[3].as_object().unwrap().get("#text").unwrap().as_str().unwrap().contains("2a96cbd8b46e442fc41c2b86b821562f") { // i sincerely apologize for writing this, and for the fact that you had to read it
+			let cur_track_info = http
+				.get(
+					"https://ws.audioscrobbler.com/2.0/",
+				)
+				.query(&[
+					("method", "track.getInfo"),
+					("api_key", env::var("LASTFM_KEY").unwrap().as_str()),
+					("format", "json"),
+					("artist", track.get("artist").unwrap().get("name").unwrap().as_str().unwrap()),
+					("track", track.get("name").unwrap().as_str().unwrap()),
+				])
+				.send()
+				.await.unwrap();
+			let ctinfo = cur_track_info.json::<Value>().await.unwrap();
+			let a = if ctinfo.get("track").unwrap().get("album").is_some() {ctinfo.get("track").unwrap().get("album").unwrap()} else {ctinfo.get("track").unwrap()};
+			*track.get_mut("image").unwrap() = json!(a
+				.get("image").unwrap_or(&json!(null)));
+			top_tracks.toptracks.track[trackn] = track.clone();
+		}
 	}
 	LastFMResponse {
         top_artist: top_artists.topartists.artist[0].clone(),
