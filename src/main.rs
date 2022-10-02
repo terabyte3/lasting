@@ -90,7 +90,7 @@ async fn get_lastfm(http: &Client, u: String) -> LastFMResponse {
 			("api_key", env::var("LASTFM_KEY").unwrap().as_str()),
 			("format", "json"),
 			("period", "1week"),
-			("limit", "24"),
+			("limit", "48"),
 			("user", &u),
 		])
 		.send()
