@@ -74,7 +74,7 @@ async fn get_lastfm(http: &Client, u: String) -> LastFMResponse {
 			("method", "user.getTopArtists"),
 			("api_key", env::var("LASTFM_KEY").unwrap().as_str()),
 			("format", "json"),
-			("period", "1week"),
+			("period", "1month"),
 			("limit", "1"),
 			("user", &u),
 		])
@@ -89,7 +89,7 @@ async fn get_lastfm(http: &Client, u: String) -> LastFMResponse {
 			("method", "user.getTopTracks"),
 			("api_key", env::var("LASTFM_KEY").unwrap().as_str()),
 			("format", "json"),
-			("period", "1week"),
+			("period", "1month"),
 			("limit", "48"),
 			("user", &u),
 		])
