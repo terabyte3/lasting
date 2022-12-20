@@ -60,7 +60,7 @@ struct TopTrack {
 
 #[cached(
     size = 1000,
-    time = 604800,
+    time = 86400,
     time_refresh = true,
     key = "String",
     convert = r#"{ format!("{}", u) }"#
