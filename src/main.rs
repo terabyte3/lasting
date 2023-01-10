@@ -83,17 +83,7 @@ async fn get_lastfm(
         .send()
         .await?;
     if top_artists_res.status() != 200 {
-        return Ok(LastFMResponse {
-            top_artist: TopArtist {
-                name: "null".to_string(),
-                url: "https://www.last.fm/user/".to_string(),
-                image: vec![Image {
-                    size: "small".to_string(),
-                    text: "https://example.com".to_string(),
-                }],
-            },
-            top_tracks: vec![],
-        });
+        return Err(Box::new(std::io::Error::new(std::io::ErrorKind::Other, format!("user {} not found", u))))
     }
     let top_artists: TopArtists = top_artists_res.json::<TopArtists>().await.unwrap();
     let top_tracks_res = http
