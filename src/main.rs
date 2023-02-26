@@ -164,6 +164,25 @@ async fn user(data: web::Data<AppState>, user: web::Path<String>) -> impl Respon
     }
 }
 
+#[get("/current/{user}")]
+async fn current(data: web::Data<AppState>, current_user: web::Path<String>) -> impl Responder {
+    let http = &data.client;
+    println!("wajfklsjaklfd");
+    let now_playing_res = http
+        .get("https://ws.audioscrobbler.com/2.0/")
+        .query(&[
+            ("method", "user.getRecentTracks"),
+            ("api_key", env::var("LASTFM_KEY").unwrap().as_str()),
+            ("format", "json"),
+            ("user", &current_user.to_string()),
+            ("limit", "1"),
+        ])
+        .send()
+        .await
+        .unwrap();
+    HttpResponse::Ok().json(now_playing_res.json::<Value>().await.unwrap())
+}
+
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
@@ -176,6 +195,7 @@ async fn main() -> std::io::Result<()> {
             .wrap(Logger::default())
             .service(user)
             .service(index)
+            .service(current)
     })
     .bind("0.0.0.0:8080")?
     .run()
