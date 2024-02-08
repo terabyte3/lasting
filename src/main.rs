@@ -12,7 +12,7 @@ struct AppState {
 
 #[derive(Serialize, Clone, Debug)]
 struct LastFMResponse {
-    top_artist: TopArtist,
+    top_artist: Option<TopArtist>,
     top_tracks: Vec<Value>,
 }
 
@@ -83,7 +83,10 @@ async fn get_lastfm(
         .send()
         .await?;
     if top_artists_res.status() != 200 {
-        return Err(Box::new(std::io::Error::new(std::io::ErrorKind::Other, format!("user {} not found", u))))
+        return Err(Box::new(std::io::Error::new(
+            std::io::ErrorKind::Other,
+            format!("user {} not found", u),
+        )));
     }
     let top_artists: TopArtists = top_artists_res.json::<TopArtists>().await.unwrap();
     let top_tracks_res = http
@@ -143,8 +146,14 @@ async fn get_lastfm(
             top_tracks.toptracks.track[trackn] = track.clone();
         }
     }
+    // set top artist to top_artists.topartists.artist[0] if its not empty, otherwise null
+    let top_artist = if top_artists.topartists.artist.len() > 0 {
+        Some(top_artists.topartists.artist[0].clone())
+    } else {
+        None
+    };
     Ok(LastFMResponse {
-        top_artist: top_artists.topartists.artist[0].clone(),
+        top_artist,
         top_tracks: top_tracks.toptracks.track,
     })
 }
@@ -197,7 +206,7 @@ async fn main() -> std::io::Result<()> {
             .service(index)
             .service(current)
     })
-    .bind("0.0.0.0:8080")?
+    .bind("0.0.0.0:3000")?
     .run()
     .await
 }
